@@ -26,16 +26,21 @@ namespace MidiCSharpConsole
 
     class Program
     {
+        class MidiException : Exception
+        {
+            public MidiException(string message) : base(message) { }
+        }
+
         delegate MMRESULT VoidDelegate();
 
-        // Helper Macro
+        // Helper Method
         // If Midi Api returns error, throws exception
         static void VerifyMidi(VoidDelegate midiFuncAndParams)
         {
             MMRESULT midiFuncResult = midiFuncAndParams();
             if (midiFuncResult != MMRESULT.MMSYSERR_NOERROR)
             {
-                throw new Exception("Midi Error: " + midiFuncResult);
+                throw new MidiException("Midi Error: " + midiFuncResult);
             }
         }
 
