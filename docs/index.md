@@ -1,37 +1,167 @@
-## Welcome to GitHub Pages
+## Introduction
 
-You can use the [editor on GitHub](https://github.com/KodiStudios/midi-csharp-console/edit/main/docs/index.md) to maintain and preview the content for your website in Markdown files.
+This project is a Demo of how to use Midi Windows Apis in C# to play Sample Sound Notes and Select Instruments.
 
-Whenever you commit to this repository, GitHub Pages will run [Jekyll](https://jekyllrb.com/) to rebuild the pages in your site, from the content in your Markdown files.
+Here's Midi C# code to play Middle C Note on Guitar:
 
-### Markdown
+```C#
+// Copyright (c) Kodi Studios 2021.
+// Licensed under the MIT license.
 
-Markdown is a lightweight and easy-to-use syntax for styling your writing. It includes conventions for
+using System;
+using System.Runtime.InteropServices;
+using System.Threading;
 
-```markdown
-Syntax highlighted code block
+namespace MidiCSharpConsole
+{
+    static class NativeMethods
+    {
+        [DllImport("winmm.dll")]
+        public static extern uint midiOutOpen(out IntPtr lphMidiOut, uint uDeviceID, IntPtr dwCallback, IntPtr dwInstance, uint dwFlags);
 
-# Header 1
-## Header 2
-### Header 3
+        [DllImport("winmm.dll")]
+        public static extern uint midiOutShortMsg(IntPtr hMidiOut, uint dwMsg);
 
-- Bulleted
-- List
+        [DllImport("winmm.dll")]
+        public static extern uint midiOutClose(IntPtr hMidiOut);
+    }
 
-1. Numbered
-2. List
+    class Program
+    {
+        // Plays Midi Note
+        // To Stop playing, set velocity parameter to 0
+        static void SendMidiNote(
+            IntPtr hMidiOut,
+            byte channel,  // 4 bits, 0 to 15
+            byte pitch,    // 7 bits, 0 to 127
+            byte velocity  // 7 bits, 0 to 127
+        )
+        {
+            // "Note On" Protocol:
+            // [0] Status byte     : 0b 1001 CCCC
+            //     Note On Signature   : 0b 1001
+            //     Channel 4-bits      : 0b CCCC
+            // [1] Pitch 7-bits    : 0b 0PPP PPPP
+            // [2] Velocity 7-bits : 0b 0VVV VVVV
+            // [3] Unused          : 0b 0000 0000
+            // Reference: https://www.cs.cmu.edu/~music/cmsip/readings/MIDI%20tutorial%20for%20programmers.html
 
-**Bold** and _Italic_ and `Code` text
+            // To Turn "Note Off", simply pass 0 as Velocity (Volume)
 
-[Link](url) and ![Image](src)
+            const byte NoteOnSignature = 0b1001;
+            byte statusByte = NoteOnSignature;         // 0b 0000 1001
+            statusByte = (byte)(statusByte << 4);      // 0b 1001 0000
+            statusByte = (byte)(statusByte | channel); // 0b 1001 CCCC
+
+            byte[] bData = new byte[4];
+            bData[0] = statusByte;  // MIDI Status byte
+            bData[1] = pitch;       // First MIDI data byte
+            bData[2] = velocity;    // Second MIDI data byte
+            // Byte [3] is unused
+
+            // Midi message is 4 bytes
+            // Windows Midi midiOutShortMsg Api passes
+            // those 4 bytes as DWORD type.
+            uint dwData = BitConverter.ToUInt32(bData, /*startIndex*/ 0);
+
+            NativeMethods.midiOutShortMsg(hMidiOut, dwData);
+        }
+
+        static void SelectMidiInstrument(
+            IntPtr hMidiOut,
+            byte channel,       // 4 bits, 0 to 15
+            byte instrument     // 7 bits, 0 to 127
+        )
+        {
+            // Set Midi Instrument Protocol:
+            // [0] Status byte          : 0b 1100 CCCC
+            //     Set Instrument Signature      : 0b 1100
+            //     Channel 4-bits                : 0b CCCC
+            // [1] Instrument 7-bits    : 0b 0III IIII
+            // [2] Unused               : 0b 0000 0000
+            // [3] Unused               : 0b 0000 0000
+
+            const byte SetInstrumentSignature = 0b1100;
+            byte statusByte = SetInstrumentSignature;  // 0b 0000 1100
+            statusByte = (byte)(statusByte << 4);      // 0b 1100 0000
+            statusByte = (byte)(statusByte | channel); // 0b 1100 CCCC
+
+            byte[] bData = new byte[4];
+
+            bData[0] = statusByte;       // MIDI Status byte
+            bData[1] = instrument;       // First MIDI data byte
+            // Bytes [2] and [3] are unused
+
+            // Midi message is 4 bytes
+            // Windows Midi midiOutShortMsg Api passes
+            // those 4 bytes as DWORD type.
+            uint dwData = BitConverter.ToUInt32(bData, /*startIndex*/ 0);
+
+            NativeMethods.midiOutShortMsg(hMidiOut, dwData);
+        }
+
+        static void Main()
+        {
+            // Open Midi Handle
+            NativeMethods.midiOutOpen(
+                out IntPtr hMidiOut,
+                /*uDeviceID*/ 0, // System's Midi device is at index 0
+                /*dwCallback*/ IntPtr.Zero,
+                /*dwInstance*/ IntPtr.Zero,
+                /*fdwOpen*/ 0);
+
+            Console.Write("Select Instrument\n");
+            // Set Instruments for Channels 0 and 1
+            SelectMidiInstrument(hMidiOut, /*channel*/ 0, /*instrument: Guitar*/ 24);
+
+            Console.Write("Start Playing Note\n");
+            SendMidiNote(
+                hMidiOut,
+                /*channel*/ 0,
+                /*pitch (Note): Middle C*/ 60,
+                /*velocity (Volume)*/ 90);
+
+            Console.Write("Continue Playing for 2 Seconds\n");
+            Thread.Sleep(TimeSpan.FromMilliseconds(2000));
+
+            Console.Write("Stop Playing Note\n");
+            SendMidiNote(
+                hMidiOut,
+                /*channel*/ 0,
+                /*pitch*/ 60,
+                /*velocity (Volume): Min*/ 0);
+
+            NativeMethods.midiOutClose(hMidiOut);
+        }
+    }
+}
 ```
 
-For more details see [GitHub Flavored Markdown](https://guides.github.com/features/mastering-markdown/).
+Full Source Code:  
+[Program.cs](https://github.com/KodiStudios/midi-csharp-console/blob/main/MidiCSharpConsole/Program.cs)
 
-### Jekyll Themes
+Compiled App:  
+[MidiCSharpConsole.exe](https://github.com/KodiStudios/midi-csharp-console/releases/latest)
 
-Your Pages site will use the layout and styles from the Jekyll theme you have selected in your [repository settings](https://github.com/KodiStudios/midi-csharp-console/settings). The name of this theme is saved in the Jekyll `_config.yml` configuration file.
+## Details
 
-### Support or Contact
+Project is a simple Console App and should run on any Windows OS, eg Windows 7, Windows 10.
 
-Having trouble with Pages? Check out our [documentation](https://docs.github.com/categories/github-pages-basics/) or [contact support](https://support.github.com/contact) and we’ll help you sort it out.
+Midi Apis used:  
+```C++
+MMRESULT midiOutOpen(...)
+MMRESULT midiOutShortMsg(...)
+MMRESULT midiOutClose(...)
+```
+
+## Midi Documentation
+
+Full Windows Midi Api Official Documentation:  
+[mmeapi](https://docs.microsoft.com/en-us/windows/win32/api/mmeapi/)
+
+## Links
+
+Midi Protocol:  
+https://www.cs.cmu.edu/~music/cmsip/readings/MIDI%20tutorial%20for%20programmers.html
+
+Cheers!
