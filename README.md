@@ -1,2 +1,3 @@
-# midi-csharp-console
-Midi C# Windows Api Example Console App
+# midi-csharp-example
+
+<http://kodistudios.github.io/midi-csharp-example>
