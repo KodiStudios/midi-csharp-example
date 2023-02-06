@@ -1,11 +1,25 @@
-## Introduction
+# Introduction
 
-This project is a Demo of how to use Midi Windows Apis in C# to play Sample Sound Notes and Select Instruments.
+This project is a Demo of how to use Midi C# Windows Apis to play any Note on a selected Instrument. For example it plays Middle C Note on Guitar.
+
+## GitHub Repo
+
+<https://github.com/KodiStudios/midi-csharp-console>
+
+## Download
+
+Compiled App:  
+[MidiCppConsole.exe](https://github.com/KodiStudios/midi-sharp-console/releases/latest)
+
+Requirements: Windows  
+For example: Windows 7, Windows 10, Windows 11
+
+## Source Code
 
 Here's Midi C# code to play Middle C Note on Guitar:
 
 ```C#
-// Copyright (c) Kodi Studios 2021.
+// Copyright (c) Kodi Studios 2023.
 // Licensed under the MIT license.
 
 using System;
@@ -110,11 +124,11 @@ namespace MidiCSharpConsole
                 /*dwInstance*/ IntPtr.Zero,
                 /*fdwOpen*/ 0);
 
-            Console.Write("Select Instrument\n");
+            Console.Write("Select Midi Instrument: Guitar\n");
             // Set Instruments for Channels 0 and 1
             SelectMidiInstrument(hMidiOut, /*channel*/ 0, /*instrument: Guitar*/ 24);
 
-            Console.Write("Start Playing Note\n");
+            Console.Write("Start Playing Note: Middle C\n");
             SendMidiNote(
                 hMidiOut,
                 /*channel*/ 0,
@@ -137,17 +151,13 @@ namespace MidiCSharpConsole
 }
 ```
 
-Full Source Code:  
+Full Source Code in GitHub Repo:  
 [Program.cs](https://github.com/KodiStudios/midi-csharp-console/blob/main/MidiCSharpConsole/Program.cs)
-
-Compiled App:  
-[MidiCSharpConsole.exe](https://github.com/KodiStudios/midi-csharp-console/releases/latest)
 
 ## Details
 
-Project is a simple Console App and should run on any Windows OS, eg Windows 7, Windows 10.
+Windows Midi Apis used:  
 
-Midi Apis used:  
 ```C++
 MMRESULT midiOutOpen(...)
 MMRESULT midiOutShortMsg(...)

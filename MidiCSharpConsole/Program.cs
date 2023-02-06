@@ -1,4 +1,4 @@
-﻿// Copyright (c) Kodi Studios 2021.
+﻿// Copyright (c) Kodi Studios 2023.
 // Licensed under the MIT license.
 
 using System;
@@ -103,11 +103,11 @@ namespace MidiCSharpConsole
                 /*dwInstance*/ IntPtr.Zero,
                 /*fdwOpen*/ 0);
 
-            Console.Write("Select Instrument\n");
+            Console.Write("Select Midi Instrument: Guitar\n");
             // Set Instruments for Channels 0 and 1
             SelectMidiInstrument(hMidiOut, /*channel*/ 0, /*instrument: Guitar*/ 24);
 
-            Console.Write("Start Playing Note\n");
+            Console.Write("Start Playing Note: Middle C\n");
             SendMidiNote(
                 hMidiOut,
                 /*channel*/ 0,
